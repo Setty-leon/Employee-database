@@ -89,7 +89,31 @@ def generate_payslip_pdf(emp_num, month):
     c.drawString(100, 590, f"Final Salary: {salary_info}")
     c.save()
     return filename
+import streamlit as st
+import streamlit_authenticator as stauth
 
+# --- AUTHENTICATION SETUP ---
+names = ['Setty Ncube', 'Admin']
+usernames = ['setty', 'admin']
+passwords = ['mypassword', 'admin123']
+
+# Hash passwords
+hashed_passwords = stauth.Hasher(passwords).generate()
+
+authenticator = stauth.Authenticate(names, usernames, hashed_passwords,
+                                    'employee_app', 'abcdef', cookie_expiry_days=30)
+
+name, authentication_status, username = authenticator.login('Login', 'main')
+
+# --- LOGIN LOGIC ---
+if authentication_status:
+    st.success(f"Welcome {name}!")
+    st.title("Employee Management App")
+    # ✅ Place your existing app code BELOW this block
+elif authentication_status == False:
+    st.error("Username or password is incorrect")
+elif authentication_status == None:
+    st.warning("Please enter your username and password")
 # Login system
 def login():
     st.sidebar.title("Login")
@@ -286,4 +310,5 @@ def main():
         employee_interface(user)
 
 if __name__ == "__main__":
+
     main()
