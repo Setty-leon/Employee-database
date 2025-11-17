@@ -6,6 +6,8 @@ import pandas as pd
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
+import streamlit_authenticator as stauth
+
 
 # File paths
 DB_FILE = "employee_database.json"
@@ -312,3 +314,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
