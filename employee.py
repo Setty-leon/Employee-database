@@ -100,7 +100,7 @@ usernames = ['setty', 'admin']
 passwords = ['mypassword', 'admin123']
 
 # Hash passwords
-hashed_passwords = stauth.Hasher().generate(passwords)
+hashed_passwords = stauth.Hasher(passwords).generate()
 
 authenticator = stauth.Authenticate(names, usernames, hashed_passwords,
                                     'employee_app', 'abcdef', cookie_expiry_days=30)
@@ -314,5 +314,6 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
