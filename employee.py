@@ -7,7 +7,7 @@ from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import streamlit_authenticator as stauth
-
+import bcrypt
 
 # File paths
 DB_FILE = "employee_database.json"
@@ -91,8 +91,6 @@ def generate_payslip_pdf(emp_num, month):
     c.drawString(100, 590, f"Final Salary: {salary_info}")
     c.save()
     return filename
-import streamlit as st
-import streamlit_authenticator as stauth
 
 # --- AUTHENTICATION SETUP ---
 names = ['Setty Ncube', 'Admin']
@@ -100,7 +98,8 @@ usernames = ['setty', 'admin']
 passwords = ['mypassword', 'admin123']
 
 # Hash passwords
-hashed_passwords = stauth.Hasher(passwords).generate()
+hashed_passwords = [bcrypt.hashpw(pw.encode(), bcrypt.gensalt()).decode() for pw in passwords]
+
 
 authenticator = stauth.Authenticate(names, usernames, hashed_passwords,
                                     'employee_app', 'abcdef', cookie_expiry_days=30)
@@ -314,6 +313,7 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
 
