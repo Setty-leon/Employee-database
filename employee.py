@@ -6,8 +6,6 @@ import pandas as pd
 from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-import streamlit_authenticator as stauth
-import bcrypt
 
 # File paths
 DB_FILE = "employee_database.json"
@@ -93,27 +91,45 @@ def generate_payslip_pdf(emp_num, month):
     return filename
 
 
-# Login system
+# ---- Login system (now uses st.session_state so it survives reruns) ----
+def init_session_state():
+    if "role" not in st.session_state:
+        st.session_state.role = None
+    if "user" not in st.session_state:
+        st.session_state.user = None
+
 def login():
     st.sidebar.title("Login")
-    role = st.sidebar.selectbox("Login as", ["Admin", "Employee"])
-    if role == "Admin":
-        username = st.sidebar.text_input("Username")
-        password = st.sidebar.text_input("Password", type="password")
+
+    if st.session_state.role is not None:
+        st.sidebar.success(f"Logged in as {st.session_state.role}")
+        if st.sidebar.button("Logout"):
+            st.session_state.role = None
+            st.session_state.user = None
+            st.rerun()
+        return
+
+    login_type = st.sidebar.selectbox("Login as", ["Admin", "Employee"])
+    if login_type == "Admin":
+        username = st.sidebar.text_input("Username", key="admin_username")
+        password = st.sidebar.text_input("Password", type="password", key="admin_password")
         if st.sidebar.button("Login"):
             if (username == "admin" and password == "admin123") or (username == "manager" and password == "mgr2024"):
-                return "Admin", username
+                st.session_state.role = "Admin"
+                st.session_state.user = username
+                st.rerun()
             else:
                 st.sidebar.error("Invalid admin credentials.")
     else:
-        emp_num = st.sidebar.text_input("Employee Number")
-        password = st.sidebar.text_input("Password", type="password")
+        emp_num = st.sidebar.text_input("Employee Number", key="emp_num_input")
+        password = st.sidebar.text_input("Password", type="password", key="emp_password_input")
         if st.sidebar.button("Login"):
             if emp_num in employee_db and employee_db[emp_num].get("Password") == password:
-                return "Employee", emp_num
+                st.session_state.role = "Employee"
+                st.session_state.user = emp_num
+                st.rerun()
             else:
                 st.sidebar.error("Invalid employee credentials.")
-    return None, None
 
 # Admin interface
 def admin_interface():
@@ -133,7 +149,7 @@ def admin_interface():
         work_value = st.number_input("Enter number of hours or days", min_value=0)
         overtime = st.number_input("Overtime Hours", min_value=0)
         deductions = st.number_input("Deductions", min_value=0.0)
-        password = st.text_input("Set Employee Password")
+        password = st.text_input("Set Employee Password", type="password")
 
         if st.button("Add Employee"):
             error = validate_inputs(name, dob, id_number, age, department)
@@ -171,9 +187,9 @@ def admin_interface():
             age = st.text_input("Age", emp["Age"])
             department = st.text_input("Department", emp["Department"])
             role = st.selectbox("Role", list(hourly_rates.keys()), index=list(hourly_rates.keys()).index(emp["Role"]))
-            hours = st.number_input("Hours Worked", value=emp["Hours Worked"])
-            overtime = st.number_input("Overtime Hours", value=emp.get("Overtime", 0))
-            deductions = st.number_input("Deductions", value=emp.get("Deductions", 0.0))
+            hours = st.number_input("Hours Worked", value=float(emp["Hours Worked"]))
+            overtime = st.number_input("Overtime Hours", value=float(emp.get("Overtime", 0)))
+            deductions = st.number_input("Deductions", value=float(emp.get("Deductions", 0.0)))
 
             if st.button("Update"):
                 error = validate_inputs(name, dob, id_number, age, department)
@@ -282,17 +298,13 @@ def employee_interface(emp_num):
 
 # Main app
 def main():
-    role, user = login()
-    if role == "Admin":
+    init_session_state()
+    login()
+
+    if st.session_state.role == "Admin":
         admin_interface()
-    elif role == "Employee":
-        employee_interface(user)
+    elif st.session_state.role == "Employee":
+        employee_interface(st.session_state.user)
 
 if __name__ == "__main__":
-
     main()
-
-
-
-
-
